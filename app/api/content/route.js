@@ -20,7 +20,7 @@ export async function GET(request) {
             if (type.includes('project')) entityType = 'PROJECT';
             else if (type.includes('event')) entityType = 'EVENT';
             else if (type.includes('gallery')) entityType = 'GALLERY';
-
+            else if (type.includes('timeline')) entityType = 'TIMELINE';
             const { data: mediaData } = await supabase
                 .from('media_gallery')
                 .select('image_url')
@@ -42,7 +42,6 @@ export async function GET(request) {
         // --- BRANCH 2: MAIN DATA LOAD ---
 
         // 1. Run Queries
-        // UPDATED: All main queries now use 'sort_order' as the primary sort key
         const [
             projectsRes,
             eventsRes,
@@ -109,7 +108,9 @@ export async function GET(request) {
             ...attachMedia(e, 'EVENT'),
             date: e.event_date
         }));
-
+        const processedTimeline = timelineData.map(t => ({
+            ...attachMedia(t, 'TIMELINE'),
+        }));
         const today = new Date().toISOString();
 
         return NextResponse.json({
@@ -121,7 +122,7 @@ export async function GET(request) {
             },
             team: teamData.map(t => ({ ...t, role: t.team_role, image: t.image_url })),
             alumni: alumniData.map(a => ({ ...a, currentRole: a.job_title, year: a.graduation_year, image: a.image_url, link: a.linkedin_url })),
-            timelineEvents: timelineData,
+            timelineEvents: processedTimeline,
             achievements: achievementsData.map(a => ({ ...a, icon: a.icon || 'award' })),
             partnersData: partnersData.map(p => ({ ...p, logoUrl: p.logo_url, websiteUrl: p.website_url }))
         });

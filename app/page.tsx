@@ -224,7 +224,10 @@ export default function Home() {
         )}
 
         {appData.timelineEvents.length > 0 && (
-          <TimelineSection timelineEvents={appData.timelineEvents} />
+          <TimelineSection
+            timelineEvents={appData.timelineEvents}
+            onShowDetails={handleShowDetails}
+          />
         )}
 
         {appData.teamData.length > 0 && (

@@ -172,7 +172,11 @@
          * A simple loading spinner.
          */
         const Loader = () => <div className="loader"></div>;
-
+        const getEntityType = (viewName) => {
+            if (viewName === 'gallery') return 'GALLERY';
+            if (viewName === 'timeline') return 'TIMELINE'; // Specific override
+            return viewName.slice(0, -1).toUpperCase(); // Default fallback (projects -> PROJECT)
+        };
         /**
          * Helper button for file inputs to trigger hidden file selection.
          */
@@ -759,9 +763,9 @@
                             </form>
 
                             {/* Media Manager Integration */}
-                            {(view === 'projects' || view === 'events' || view === 'gallery') && (
+                            {(view === 'projects' || view === 'events' || view === 'gallery' || view === 'timeline') && (
                                 <MediaManager
-                                    entityType={view === 'gallery' ? 'GALLERY' : view.slice(0, -1).toUpperCase()}
+                                    entityType={getEntityType(view)}
                                     entityId={formData.id}
                                     supabase={client}
                                     {...galleryProps}

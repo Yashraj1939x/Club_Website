@@ -150,7 +150,7 @@ export const LoadingScreen = ({ isLoading }) => (
     <div id="loading-screen" className={`fixed inset-0 flex items-center justify-center z-50 transition-opacity duration-500 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[var(--primary-color)] mx-auto mb-4" />
-            <h2 className="text-xl font-bold">Loading Experience...</h2>
+            <h2 className="text-xl font-bold">Loading IUCEE-RIT Experiance...</h2>
         </div>
     </div>
 );
@@ -503,20 +503,29 @@ export const ProjectsSection = ({ projects, onShowDetails }) => {
     );
 };
 
-export const TimelineSection = ({ timelineEvents }) => (
+export const TimelineSection = ({ timelineEvents, onShowDetails }) => ( // Added prop
     <section className="py-20" id="timeline">
         <div className="container mx-auto px-6">
             <h2 className="text-3xl font-bold text-center mb-16 text-[var(--text-primary)]">Our Journey</h2>
             <div className="relative max-w-4xl mx-auto">
                 <div className="timeline-line absolute left-4 md:left-1/2 top-0 bottom-0 w-1 transform md:-translate-x-1/2"></div>
                 {timelineEvents && timelineEvents.map((event, index) => (
-                    <div key={index} className={`relative flex items-center justify-between mb-8 ${index % 2 === 0 ? 'md:flex-row-reverse' : 'md:flex-row'}`}>
+                    <div
+                        key={index}
+                        className={`relative flex items-center justify-between mb-8 group cursor-pointer ${index % 2 === 0 ? 'md:flex-row-reverse' : 'md:flex-row'}`}
+                        onClick={() => onShowDetails('timeline', event)} // Added Click Handler
+                    >
                         <div className="hidden md:block w-5/12"></div>
-                        <div className="absolute left-4 md:left-1/2 transform -translate-x-1/2 timeline-dot w-4 h-4 rounded-full z-10"></div>
-                        <div className="ml-12 md:ml-0 w-full md:w-5/12 timeline-content p-6 rounded-lg">
+                        <div className="absolute left-4 md:left-1/2 transform -translate-x-1/2 timeline-dot w-4 h-4 rounded-full z-10 transition-transform group-hover:scale-125"></div>
+                        <div className="ml-12 md:ml-0 w-full md:w-5/12 timeline-content p-6 rounded-lg transition-transform group-hover:-translate-y-1">
                             <span className="text-[var(--primary-color)] font-bold">{event.year}</span>
                             <h3 className="text-lg font-bold text-[var(--text-primary)]">{event.title}</h3>
-                            <p className="text-sm text-[var(--text-secondary)]">{event.description}</p>
+                            <p className="text-sm text-[var(--text-secondary)] line-clamp-3">{event.description}</p>
+                            {event.totalImages > 0 && (
+                                <div className="mt-2 text-xs text-[var(--text-muted)] flex items-center gap-1">
+                                    <Icon name="images" /> View Gallery ({event.totalImages})
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -1108,6 +1117,18 @@ export const DetailsModal = ({ isOpen, onClose, type, data, onImageClick }) => {
                                 <div><span className="font-bold">Date:</span> {new Date(data.date).toDateString()}</div>
                                 <div><span className="font-bold">Time:</span> {get('time', 'TBA')}</div>
                             </div>
+                        </div>
+                    </div>
+                );
+            case 'timeline':
+                return (
+                    <div>
+                        <GalleryScroller images={data.images} title={data.title} onImageClick={onImageClick} />
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-2xl font-bold text-[var(--primary-color)]">{data.year}</span>
+                            </div>
+                            <p className="text-[var(--text-secondary)] whitespace-pre-wrap">{data.description}</p>
                         </div>
                     </div>
                 );
