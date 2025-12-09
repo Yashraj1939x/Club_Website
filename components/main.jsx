@@ -145,6 +145,37 @@ const Icon = ({ name, className = "" }) => {
     return <IconComponent className={className} />;
 };
 
+export const LazyLoadSection = ({ children, id }) => {
+    const [isVisible, setIsVisible] = useState(false);
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                    observer.disconnect();
+                }
+            },
+            {
+                rootMargin: '100% 0px 0px 0px', // Triggers when element is 2 screens away
+                threshold: 0
+            }
+        );
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <div ref={containerRef} id={id} style={{ minHeight: isVisible ? 'auto' : '200px' }}>
+            {isVisible ? children : null}
+        </div>
+    );
+};
 export const LoadingScreen = ({ isLoading, progress = 0 }) => {
     if (!isLoading) return null;
 
@@ -368,21 +399,39 @@ export const Navbar = ({ isScrolled }) => {
         { href: '#hero', title: 'Join' },
         { href: '#projects', title: 'Projects' },
         { href: '#events', title: 'Events' },
-        { href: '#sdg', title: 'SDGs' },
         { href: '#team', title: 'Team' },
+        { href: '#alumni', title: 'Alumni' },
+        { href: '#gallery', title: 'Gallery' },
     ];
+
+    // URLs for the logos - Update these if needed
+    const URL_IUCEE = "https://iucee.org/";
+    const URL_RIT = "https://www.ritindia.edu/";
 
     return (
         <>
-            <nav id="navbar" className={`fixed top-0 w-full z-40 ${isScrolled ? 'scrolled' : ''}`}>
+            {/* Added '!isMenuOpen' condition to className. 
+               This hides the background navbar when the menu is open, 
+               preventing the hamburger and X from overlapping.
+            */}
+            <nav
+                id="navbar"
+                className={`fixed top-0 w-full z-40 transition-all duration-300 ${isScrolled ? 'scrolled' : ''} ${isMenuOpen ? 'hidden' : 'block'}`}
+            >
                 <div className="container mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <h1 className="text-2xl font-bold text-[var(--primary-color)] tracking-tight whitespace-nowrap">
                             IUCEE-RIT
                         </h1>
+
+                        {/* Desktop Logos - Now Clickable */}
                         <div className="hidden sm:flex items-center gap-3 border-l border-gray-400 pl-4 h-8">
-                            <img src="/logos/iucee.jpg" alt="IUCEE Logo" className="h-full w-auto object-contain" />
-                            <img src="/logos/rit.jpg" alt="RIT Logo" className="h-full w-auto object-contain" />
+                            <a href={URL_IUCEE} target="_blank" rel="noopener noreferrer" className="h-full block hover:opacity-80 transition-opacity">
+                                <img src="/logos/iucee.jpg" alt="IUCEE Logo" className="h-full w-auto object-contain" />
+                            </a>
+                            <a href={URL_RIT} target="_blank" rel="noopener noreferrer" className="h-full block hover:opacity-80 transition-opacity">
+                                <img src="/logos/rit.jpg" alt="RIT Logo" className="h-full w-auto object-contain" />
+                            </a>
                         </div>
                     </div>
 
@@ -396,21 +445,47 @@ export const Navbar = ({ isScrolled }) => {
 
                     <div className="md:hidden flex items-center gap-4">
                         <ThemeToggle />
-                        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-[var(--text-primary)] text-2xl">
+                        <button
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className="text-[var(--text-primary)] text-2xl focus:outline-none"
+                            aria-label="Open Menu"
+                        >
                             ☰
                         </button>
                     </div>
                 </div>
             </nav>
+
+            {/* Mobile Menu Overlay */}
             {isMenuOpen && (
-                <div className="fixed inset-0 bg-[var(--bg-primary)] z-50 flex flex-col items-center justify-center space-y-8 animate-fadeInUp">
-                    <button onClick={() => setIsMenuOpen(false)} className="absolute top-6 right-6 text-3xl text-[var(--text-primary)]">&times;</button>
+                <div className="fixed inset-0 bg-[var(--bg-primary)] z-[100] flex flex-col items-center justify-center space-y-8 animate-fadeInUp">
+                    <button
+                        onClick={() => setIsMenuOpen(false)}
+                        className="absolute top-6 right-6 text-3xl text-[var(--text-primary)] p-2 hover:text-[var(--primary-color)] focus:outline-none"
+                        aria-label="Close Menu"
+                    >
+                        &times;
+                    </button>
+
                     {navLinks.map(link => (
-                        <a key={link.href} href={link.href} onClick={() => setIsMenuOpen(false)} className="text-2xl font-bold text-[var(--text-primary)] hover:text-[var(--primary-color)]">{link.title}</a>
+                        <a
+                            key={link.href}
+                            href={link.href}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="text-2xl font-bold text-[var(--text-primary)] hover:text-[var(--primary-color)]"
+                        >
+                            {link.title}
+                        </a>
                     ))}
+
+                    {/* Mobile Menu Logos - Now Clickable */}
                     <div className="flex items-center gap-4 mt-8 opacity-80">
-                        <img src="/logos/iucee.jpg" alt="IUCEE" className="h-10 w-auto" />
-                        <img src="/logos/rit.jpg" alt="RIT" className="h-10 w-auto" />
+                        <a href={URL_IUCEE} target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)}>
+                            <img src="/logos/iucee.jpg" alt="IUCEE" className="h-10 w-auto object-contain" />
+                        </a>
+                        <a href={URL_RIT} target="_blank" rel="noopener noreferrer" onClick={() => setIsMenuOpen(false)}>
+                            <img src="/logos/rit.jpg" alt="RIT" className="h-10 w-auto object-contain" />
+                        </a>
                     </div>
                 </div>
             )}

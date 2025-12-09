@@ -7,7 +7,7 @@ import {
   LoadingScreen, Navbar, HeroSection, VisionSection, TimelineSection,
   ProjectsSection, EventsSection, AchievementsSection, TeamSection, AlumniSection,
   GalleryComponent, Footer, ApplicationModal, DetailsModal, SdgSection,
-  FullscreenViewer, ScrollToTop,
+  FullscreenViewer, ScrollToTop, LazyLoadSection,
   PartnersSection
 } from '../components/main';
 
@@ -40,20 +40,6 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
 
-  // --- OPTIMIZATION: Preload images ---
-  const preloadImages = (imageUrls) => {
-    return Promise.all(
-      imageUrls.map(url => {
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve(url);
-          img.onerror = () => resolve(url); // Resolve even on error to not block
-          img.src = url;
-        });
-      })
-    );
-  };
-
   // --- OPTIMIZATION: Extract all image URLs from data ---
   const extractAllImageUrls = (data) => {
     const urls = [];
@@ -83,7 +69,7 @@ export default function Home() {
   useEffect(() => {
     const loadAllData = async () => {
       try {
-        setLoadingProgress(10);
+        setLoadingProgress(20);
 
         // Parallel fetch
         const [contentRes, btnRes] = await Promise.all([
@@ -91,12 +77,8 @@ export default function Home() {
           fetch('/api/button-status').catch(() => null)
         ]);
 
-        setLoadingProgress(30);
-
         if (contentRes && contentRes.ok) {
           const data = await contentRes.json();
-
-          setLoadingProgress(50);
 
           // Set data immediately
           setAppData({
@@ -112,14 +94,6 @@ export default function Home() {
             achievements: data.achievements || [],
             partnersData: data.partnersData || []
           });
-
-          setLoadingProgress(60);
-
-          // CRITICAL: Preload all thumbnail images
-          const imageUrls = extractAllImageUrls(data);
-          await preloadImages(imageUrls);
-
-          setLoadingProgress(90);
         }
 
         if (btnRes && btnRes.ok) {
@@ -269,24 +243,23 @@ export default function Home() {
       <Navbar isScrolled={isScrolled} />
       <main>
         <HeroSection onJoinClick={() => setApplicationModalOpen(true)} isEnrollmentOpen={isEnrollmentOpen} />
-
-        {/* Vision is static content, kept visible */}
         <VisionSection />
-
-        {/* Conditionally Render Sections based on Data Availability */}
         {appData.achievements.length > 0 && (
           <AchievementsSection achievements={appData.achievements} />
         )}
 
-        {/* SDG is static data from file, kept visible */}
         <SdgSection sdgs={sdgData} />
 
         {appData.projectsData.length > 0 && (
-          <ProjectsSection projects={appData.projectsData} onShowDetails={handleShowDetails} />
+          <LazyLoadSection id="projects">
+            <ProjectsSection projects={appData.projectsData} onShowDetails={handleShowDetails} />
+          </LazyLoadSection>
         )}
 
         {hasEvents && (
-          <EventsSection events={appData.eventsData} onShowDetails={handleShowDetails} />
+          <LazyLoadSection id="events">
+            <EventsSection events={appData.eventsData} onShowDetails={handleShowDetails} />
+          </LazyLoadSection>
         )}
 
         {appData.timelineEvents.length > 0 && (
@@ -297,22 +270,27 @@ export default function Home() {
         )}
 
         {appData.teamData.length > 0 && (
-          <TeamSection teamMembers={appData.teamData} onShowDetails={handleShowDetails} />
+          <LazyLoadSection id="team">
+            <TeamSection teamMembers={appData.teamData} onShowDetails={handleShowDetails} />
+          </LazyLoadSection>
         )}
 
         {appData.alumni.length > 0 && (
-          <AlumniSection alumni={appData.alumni} onShowDetails={handleShowDetails} />
+          <LazyLoadSection id="alumni">
+            <AlumniSection alumni={appData.alumni} onShowDetails={handleShowDetails} />
+          </LazyLoadSection>
         )}
 
         {appData.partnersData.length > 0 && (
-          <PartnersSection partners={appData.partnersData} />
+          <LazyLoadSection id="partners">
+            <PartnersSection partners={appData.partnersData} />
+          </LazyLoadSection>
         )}
 
         {appData.galleryData.length > 0 && (
-          <GalleryComponent
-            galleryItems={appData.galleryData}
-            onGalleryClick={handleGalleryClick}
-          />
+          <LazyLoadSection id="gallery">
+            <GalleryComponent galleryItems={appData.galleryData} onGalleryClick={handleGalleryClick} />
+          </LazyLoadSection>
         )}
       </main>
       <Footer socialLinks={socialMedia} />
