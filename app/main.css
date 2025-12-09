@@ -148,7 +148,7 @@ main {
 /* --- 4.2 COMPACT PROFILE CARD DESIGN --- */
 .profile-card {
   position: relative;
-  width: 100%;
+  width: 13rem;
   aspect-ratio: 3/4;
   border-radius: 1rem;
   overflow: hidden;
@@ -316,6 +316,50 @@ main {
   left: 0;
   right: 0;
   height: 6px;
+}
+
+/* --- 4.4 Achievement Cards --- */
+.achievement-card {
+  flex: 0 0 20rem !important;
+  /* Fixed width for scroller */
+  width: 20rem !important;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px var(--shadow-color);
+  user-select: none;
+  /* Prevent text selection while dragging */
+}
+
+.achievement-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary-color);
+  box-shadow: 0 10px 20px var(--shadow-color);
+}
+
+.achievement-card .icon-wrapper {
+  font-size: 3rem;
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.achievement-card:hover .icon-wrapper {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .achievement-card {
+    flex: 0 0 75vw !important;
+    width: 75vw !important;
+  }
 }
 
 /* =========================================
@@ -547,7 +591,7 @@ main {
 
 .marquee-content {
   display: flex;
-  gap: 1.5rem;
+  gap: 0.1rem;
   width: max-content;
   margin: 0 auto;
 }
@@ -640,7 +684,119 @@ main {
 }
 
 /* =========================================
-   9. MEDIA QUERIES (Unified)
+   9. PROFILE MODAL STYLES (FINAL)
+   ========================================= */
+.profile-details-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  /* Mobile: Stack vertically */
+}
+
+/* --- Left Column: Image & Actions --- */
+.profile-details-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.profile-details-img-wrapper {
+  width: 120px;
+  /* Mobile: Compact Circle */
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--primary-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  background: var(--bg-secondary);
+}
+
+.profile-details-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- Action Buttons --- */
+.linkedin-btn {
+  background: #0077b5;
+  /* LinkedIn Brand Color */
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.linkedin-btn:hover {
+  background: #005582;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 119, 181, 0.3);
+}
+
+.secondary-socials {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+.secondary-socials a {
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  transition: color 0.2s;
+}
+
+.secondary-socials a:hover {
+  color: var(--primary-color);
+}
+
+/* --- Right Column: Text Content --- */
+.quote-block {
+  padding: 1rem 1.25rem;
+  background: var(--bg-secondary);
+  border-left: 4px solid var(--primary-color);
+  border-radius: 0 0.5rem 0.5rem 0;
+  margin: 1.25rem 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* --- DESKTOP RESPONSIVENESS --- */
+@media (min-width: 768px) {
+  .profile-details-container {
+    flex-direction: row;
+    align-items: center;
+    /* KEY FIX: Centers text vertically if bio is short */
+    gap: 2.5rem;
+    padding: 0.5rem;
+  }
+
+  .profile-details-header {
+    width: 240px;
+    /* KEY FIX: Reduced width to keep image height manageable */
+  }
+
+  .profile-details-img-wrapper {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3/4;
+    /* Desktop: Portrait Rectangle */
+    border-radius: 0.75rem;
+  }
+}
+
+/* =========================================
+   10. MEDIA QUERIES (Unified)
    ========================================= */
 
 @media (min-width: 768px) {
@@ -691,19 +847,7 @@ main {
 
   /* Mobile Nav Buttons: Smaller & Positioned at Edges */
   .gallery-nav-btn {
-    opacity: 0.8 !important;
-    /* Always visible on mobile, slightly transparent */
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1rem;
-    left: 0.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    /* Darker bg for contrast */
-  }
-
-  .gallery-nav-btn.next {
-    left: auto;
-    right: 0.5rem;
+    display: none;
   }
 
   .team-card,

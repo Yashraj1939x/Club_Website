@@ -40,31 +40,6 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
 
-  // --- OPTIMIZATION: Extract all image URLs from data ---
-  const extractAllImageUrls = (data) => {
-    const urls = [];
-
-    // Projects, events, gallery, timeline thumbnails
-    ['projectsData', 'galleryData', 'timelineEvents'].forEach(key => {
-      data[key]?.forEach(item => {
-        if (item.images?.[0]) urls.push(item.images[0]);
-      });
-    });
-
-    // Events (upcoming + past)
-    data.eventsData?.upcoming?.forEach(e => e.images?.[0] && urls.push(e.images[0]));
-    data.eventsData?.past?.forEach(e => e.images?.[0] && urls.push(e.images[0]));
-
-    // Team and alumni profile images
-    data.teamData?.forEach(t => t.image && urls.push(t.image));
-    data.alumni?.forEach(a => a.image && urls.push(a.image));
-
-    // Partner logos
-    data.partnersData?.forEach(p => p.logoUrl && urls.push(p.logoUrl));
-
-    return urls;
-  };
-
   // --- Initial Data Load (OPTIMIZED) ---
   useEffect(() => {
     const loadAllData = async () => {

@@ -114,10 +114,18 @@ const useDraggableScroll = (ref, speedMultiplier = 1.5) => {
    ====================================================================== */
 
 /** Dynamic Icon Loader */
+/** Dynamic Icon Loader - Enhanced for Direct Access */
 const Icon = ({ name, className = "" }) => {
     if (!name) return null;
 
-    const pascalName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+    // 1. Direct Lookup (User typed "FaTrophy", "SiReact", etc.)
+    // This allows access to ANY icon in the imported libraries.
+    if (FaIcons[name]) { const I = FaIcons[name]; return <I className={className} />; }
+    if (SiIcons[name]) { const I = SiIcons[name]; return <I className={className} />; }
+    if (LuIcons[name]) { const I = LuIcons[name]; return <I className={className} />; }
+
+    // 2. Fallback / Helper Mapping (Keep existing shortcuts if you use them)
+    const lowerName = name.toLowerCase();
     const iconMap = {
         users: FaIcons.FaUsers,
         target: FaIcons.FaBullseye,
@@ -130,21 +138,21 @@ const Icon = ({ name, className = "" }) => {
         images: FaIcons.FaImages,
     };
 
-    if (iconMap[name.toLowerCase()]) {
-        const IconComponent = iconMap[name.toLowerCase()];
+    if (iconMap[lowerName]) {
+        const IconComponent = iconMap[lowerName];
         return <IconComponent className={className} />;
     }
 
-    const IconComponent =
+    // 3. Last Resort: Try to construct the name (e.g. user typed "Trophy" -> tries FaTrophy)
+    const pascalName = name.charAt(0).toUpperCase() + name.slice(1);
+    const GeneratedIcon =
         FaIcons[`Fa${pascalName}`] ||
         SiIcons[`Si${pascalName}`] ||
         LuIcons[`Lu${pascalName}`] ||
-        FaIcons[name] ||
         FaIcons.FaQuestionCircle;
 
-    return <IconComponent className={className} />;
+    return <GeneratedIcon className={className} />;
 };
-
 export const LazyLoadSection = ({ children, id }) => {
     const [isVisible, setIsVisible] = useState(false);
     const containerRef = useRef(null);
@@ -670,14 +678,13 @@ export const EventsSection = ({ events, onShowDetails }) => {
 };
 
 /* --- NEW PROFILE CARD COMPONENT --- */
-const ProfileCard = ({ image, name, role, subtext, link, quote, isAlumni = false }) => {
-    const hasLink = link && link !== "#";
-    const hasQuote = isAlumni && quote && quote.length > 0;
-
+const ProfileCard = ({ image, name, role, subtext, onClick, isAlumni = false }) => {
     return (
         <div
-            className={`profile-card group ${hasQuote ? 'has-quote' : ''}`}
+            className="profile-card group cursor-pointer"
+            onClick={onClick}
             tabIndex={0}
+            role="button"
         >
             <img
                 src={image || `https://placehold.co/400x500?text=${name}`}
@@ -685,12 +692,7 @@ const ProfileCard = ({ image, name, role, subtext, link, quote, isAlumni = false
                 className="profile-img"
                 loading="lazy"
             />
-            {hasQuote && (
-                <div className="profile-quote-overlay animate-fadeIn">
-                    <span className="quote-icon">❝</span>
-                    <p className="quote-text">{quote}</p>
-                </div>
-            )}
+
             <div className="profile-overlay">
                 <h3 className="profile-name truncate">{name}</h3>
                 <p className="profile-role">{role}</p>
@@ -698,31 +700,16 @@ const ProfileCard = ({ image, name, role, subtext, link, quote, isAlumni = false
                 <div className="profile-footer">
                     <div className="profile-stats">
                         <Icon name={isAlumni ? "award" : "users"} className="text-white/80 text-xs" />
-                        <span className="truncate max-w-[80px] text-white/90">
-                            {subtext}
+                        <span className="truncate max-w-[150px] text-white/90">
+                            Tap to view details
                         </span>
                     </div>
-
-                    {hasLink ? (
-                        <a
-                            href={link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="profile-btn"
-                            onMouseDown={(e) => e.stopPropagation()}
-                        >
-                            {isAlumni ? 'Follow' : 'Connect'}
-                        </a>
-                    ) : (
-                        <span className="text-[10px] text-white/50 italic px-1">Member</span>
-                    )}
                 </div>
             </div>
         </div>
     );
 };
-
-export const TeamSection = ({ teamMembers }) => {
+export const TeamSection = ({ teamMembers, onShowDetails }) => {
     const safeMembers = teamMembers || [];
     if (safeMembers.length === 0) return null;
 
@@ -740,8 +727,7 @@ export const TeamSection = ({ teamMembers }) => {
                 name={member.name}
                 role={member.role}
                 subtext={member.department}
-                link={member.linkedin_url || member.link}
-                isAlumni={false}
+                onClick={() => onShowDetails('profile', member)} // Trigger Modal
             />
         </div>
     );
@@ -755,13 +741,13 @@ export const TeamSection = ({ teamMembers }) => {
                 <div className="container mx-auto px-6 mb-12">
                     <div className="flex flex-wrap justify-center gap-6">
                         {leaders.map((leader) => (
-                            <div key={leader.id} className="w-[220px] shrink-0">
+                            <div key={leader.id} className="w-[200px] shrink-0">
                                 <ProfileCard
                                     image={leader.image}
                                     name={leader.name}
                                     role={leader.role}
                                     subtext={leader.department}
-                                    link={leader.linkedin_url || leader.link}
+                                    onClick={() => onShowDetails('profile', leader)} // Trigger Modal
                                 />
                             </div>
                         ))}
@@ -777,8 +763,7 @@ export const TeamSection = ({ teamMembers }) => {
         </section>
     );
 };
-
-export const AlumniSection = ({ alumni }) => {
+export const AlumniSection = ({ alumni, onShowDetails }) => {
     const safeAlumni = alumni || [];
     if (safeAlumni.length === 0) return null;
 
@@ -793,9 +778,8 @@ export const AlumniSection = ({ alumni }) => {
                 name={alum.name}
                 role={alum.currentRole || alum.current_role}
                 subtext={`Batch '${alum.year}`}
-                link={alum.linkedin_url || alum.link}
-                quote={alum.quote || alum.description}
                 isAlumni={true}
+                onClick={() => onShowDetails('profile', alum)} // Trigger Modal
             />
         </div>
     );
@@ -816,15 +800,20 @@ export const AlumniSection = ({ alumni }) => {
 export const AchievementsSection = ({ achievements }) => (
     <section className="py-20" id="achievements">
         <div className="container mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {achievements.map((a, i) => (
-                    <a key={i} href={a.link} className="section-card flex flex-col items-center text-center hover:bg-[var(--bg-secondary)]">
-                        <span className="text-4xl text-[var(--primary-color)] mb-2"><Icon name={a.icon} /></span>
-                        <h3 className="font-bold text-[var(--text-primary)]">{a.title}</h3>
-                        <p className="text-xs text-[var(--text-muted)]">{a.description}</p>
-                    </a>
+            <h2 className="text-3xl font-bold text-center mb-12 text-[var(--text-primary)]">Achievements</h2>
+
+            {/* Using Scroller for horizontal scroll/drag interface */}
+            <Scroller autoScroll={true} scrollInterval={2500}>
+                {achievements && achievements.map((a, i) => (
+                    <div key={i} className="achievement-card">
+                        <div className="icon-wrapper">
+                            <Icon name={a.icon} />
+                        </div>
+                        <h3 className="text-l font-bold text-[var(--text-primary)] mb-3">{a.title}</h3>
+                        <p className="text-sm text-[var(--text-muted)] leading-relaxed">{a.description}</p>
+                    </div>
                 ))}
-            </div>
+            </Scroller>
         </div>
     </section>
 );
@@ -1215,6 +1204,93 @@ export const DetailsModal = ({ isOpen, onClose, type, data, onImageClick }) => {
                                 <div><span className="font-bold">Date:</span> {new Date(data.date).toDateString()}</div>
                                 <div><span className="font-bold">Time:</span> {get('time', 'TBA')}</div>
                             </div>
+                        </div>
+                    </div>
+                );
+            case 'profile':
+                return (
+                    <div className="profile-details-container">
+                        {/* 1. Left Column: Image & Actions */}
+                        <div className="profile-details-header">
+                            <div className="profile-details-img-wrapper">
+                                <img
+                                    src={data.image || `https://placehold.co/400x500?text=${data.name}`}
+                                    alt={data.name}
+                                    className="profile-details-img"
+                                />
+                            </div>
+
+                            {/* Connect Button */}
+                            {(data.linkedin_url || data.link) ? (
+                                <a href={data.linkedin_url || data.link} target="_blank" rel="noopener noreferrer" className="linkedin-btn">
+                                    <Icon name="FaLinkedin" /> Connect on LinkedIn
+                                </a>
+                            ) : data.email ? (
+                                <a href={`mailto:${data.email}`} className="linkedin-btn" style={{ background: '#4b5563' }}>
+                                    <Icon name="FaEnvelope" /> Send Email
+                                </a>
+                            ) : null}
+
+                            {/* Secondary Socials */}
+                            <div className="secondary-socials">
+                                {data.github_url && (
+                                    <a href={data.github_url} target="_blank" rel="noopener noreferrer" title="GitHub">
+                                        <Icon name="FaGithub" />
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 2. Right Column: Content */}
+                        <div className="flex-1 text-center md:text-left min-w-0">
+                            <h2 className="text-2xl md:text-4xl font-bold text-[var(--text-primary)] mb-2">{data.name}</h2>
+                            <div className="text-[var(--primary-color)] font-bold text-lg md:text-xl mb-4">
+                                {data.role || data.team_role || data.job_title}
+                            </div>
+
+                            {/* Badges */}
+                            <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-6 text-sm text-[var(--text-secondary)]">
+                                {data.department && (
+                                    <span className="bg-[var(--bg-secondary)] px-3 py-1 rounded-full border border-[var(--border-color)]">
+                                        <Icon name="FaBuilding" className="inline mr-1" /> {data.department}
+                                    </span>
+                                )}
+                                {(data.graduation_year || data.year) && (
+                                    <span className="bg-[var(--bg-secondary)] px-3 py-1 rounded-full border border-[var(--border-color)]">
+                                        <Icon name="FaGraduationCap" className="inline mr-1" /> Class of {data.graduation_year || data.year}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* --- KEY DIFFERENCE: Quote vs Bio --- */}
+
+                            {/* ALUMNI: Render as a Quote Block (Italic, quoted) */}
+                            {data.quote && (
+                                <div className="quote-block text-left">
+                                    <p className="italic text-[var(--text-primary)]">
+                                        "{data.quote}"
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* TEAM: Render as a Lead Bio (Normal text, no quotes) */}
+                            {data.bio && (
+                                <div className="text-left my-4">
+                                    <p className="text-[var(--text-primary)] font-medium text-lg leading-relaxed">
+                                        {data.bio}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Extended Description (About) */}
+                            {data.description && (
+                                <div className="mt-6 text-left">
+                                    <h4 className="font-bold text-[var(--text-primary)] text-sm uppercase tracking-wide mb-2 opacity-80">About</h4>
+                                    <p className="text-[var(--text-secondary)] text-sm leading-relaxed whitespace-pre-wrap">
+                                        {data.description}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
