@@ -1096,30 +1096,38 @@ export const ApplicationModal = ({ isOpen, onClose }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     if (!isOpen) return null;
+ const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
+    const formData = new FormData(e.target);
 
-        try {
-            const response = await fetch('/api/apply', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'Submission failed');
-            alert("Application Submitted Successfully!");
-            onClose();
-        } catch (error) {
-            console.error('Submission error:', error);
-            alert(`Error: ${error.message}. Please try again.`);
-        } finally {
-            setIsSubmitting(false);
-        }
+    const applicationData = {
+        name: formData.get("name"),
+        email: formData.get("email"),
+        phone: formData.get("phone"),
+        prn: formData.get("prn"),
+        branch: formData.get("branch"),
+        year: formData.get("year"),
     };
+
+    try {
+        const { error } = await supabase
+            .from("applications")
+            .insert([applicationData]);
+
+        if (error) throw error;
+
+        alert("Application Submitted Successfully!");
+        onClose();
+    } catch (error) {
+        console.error("Submission error:", error);
+        alert("Error submitting application. Please try again.");
+    } finally {
+        setIsSubmitting(false);
+    }
+};
+
 
     return (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 animate-fadeIn" onClick={onClose}>
@@ -1128,40 +1136,107 @@ export const ApplicationModal = ({ isOpen, onClose }) => {
                     <h3 className="text-2xl font-bold text-[var(--text-primary)]">Membership Application</h3>
                     <button onClick={onClose} className="text-2xl hover:text-[var(--primary-color)]">&times;</button>
                 </div>
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-sm font-semibold text-[var(--text-secondary)]">Full Name</label>
-                            <input required name="name" placeholder="John Doe" className="input-3d w-full bg-[var(--bg-secondary)] text-[var(--text-primary)] p-2 rounded border border-[var(--border-color)]" disabled={isSubmitting} />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-sm font-semibold text-[var(--text-secondary)]">Email</label>
-                            <input required type="email" name="email" placeholder="john@example.com" className="input-3d w-full bg-[var(--bg-secondary)] text-[var(--text-primary)] p-2 rounded border border-[var(--border-color)]" disabled={isSubmitting} />
-                        </div>
-                    </div>
-                    {/* Simplified fields for brevity but form structure remains */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-sm font-semibold text-[var(--text-secondary)]">Branch</label>
-                            <select required name="branch" className="input-3d w-full bg-[var(--bg-secondary)] text-[var(--text-primary)] p-2 rounded border border-[var(--border-color)]" disabled={isSubmitting}>
-                                <option value="">Select Branch</option>
-                                <option value="CS">Computer Science</option>
-                                <option value="IT">Information Technology</option>
-                                <option value="ENTC">E&TC</option>
-                                <option value="MECH">Mechanical</option>
-                                <option value="CIVIL">Civil</option>
-                                <option value="AIDS">AI & DS</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className={`btn-primary w-full py-3 mt-4 text-lg flex justify-center items-center ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
-                    >
-                        {isSubmitting ? 'Submitting...' : 'Submit Application'}
-                    </button>
-                </form>
+             <form className="space-y-4" onSubmit={handleSubmit}>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {/* Full Name */}
+    <div>
+      <label className="text-sm font-semibold">Full Name</label>
+      <input
+        required
+        name="name"
+        placeholder="John Doe"
+        disabled={isSubmitting}
+        className="input-3d w-full p-2 rounded border"
+      />
+    </div>
+
+    {/* Email */}
+    <div>
+      <label className="text-sm font-semibold">Email</label>
+      <input
+        required
+        type="email"
+        name="email"
+        placeholder="john@example.com"
+        disabled={isSubmitting}
+        className="input-3d w-full p-2 rounded border"
+      />
+    </div>
+  </div>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {/* Phone */}
+    <div>
+      <label className="text-sm font-semibold">Phone</label>
+      <input
+        required
+        name="phone"
+        placeholder="9876543210"
+        disabled={isSubmitting}
+        className="input-3d w-full p-2 rounded border"
+      />
+    </div>
+
+    {/* PRN */}
+    <div>
+      <label className="text-sm font-semibold">PRN</label>
+      <input
+        required
+        name="prn"
+        placeholder="PRN Number"
+        disabled={isSubmitting}
+        className="input-3d w-full p-2 rounded border"
+      />
+    </div>
+  </div>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {/* Branch */}
+    <div>
+      <label className="text-sm font-semibold">Branch</label>
+      <select
+        required
+        name="branch"
+        disabled={isSubmitting}
+        className="input-3d w-full p-2 rounded border"
+      >
+        <option value="">Select Branch</option>
+        <option value="CS">Computer Science</option>
+        <option value="IT">Information Technology</option>
+        <option value="ENTC">E&TC</option>
+        <option value="MECH">Mechanical</option>
+        <option value="CIVIL">Civil</option>
+        <option value="AIDS">AI & DS</option>
+      </select>
+    </div>
+
+    {/* Year */}
+    <div>
+      <label className="text-sm font-semibold">Year</label>
+      <select
+        required
+        name="year"
+        disabled={isSubmitting}
+        className="input-3d w-full p-2 rounded border"
+      >
+        <option value="">Select Year</option>
+        <option value="FY">First Year</option>
+        <option value="SY">Second Year</option>
+        <option value="TY">Third Year</option>
+        <option value="BTech">Final Year</option>
+      </select>
+    </div>
+  </div>
+
+  <button
+    type="submit"
+    disabled={isSubmitting}
+    className="btn-primary w-full py-3 mt-4 text-lg"
+  >
+    {isSubmitting ? "Submitting..." : "Submit Application"}
+  </button>
+</form>
+
             </div>
         </div>
     );
